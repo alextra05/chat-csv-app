@@ -2,23 +2,22 @@ import streamlit as st
 import pandas as pd
 import google.generativeai as genai
 
-# Configurar clave desde secrets
+# Configurar la clave API desde los secrets
 genai.configure(api_key=st.secrets["gemini"]["api_key"])
 
 st.set_page_config(page_title="Chat con CSV (Gemini)", layout="centered")
 
-st.title("📊 Chat con tu CSV usando Gemini ✅")
-
+st.title("📊 Chat con tu CSV usando Gemini")
 st.write("Este asistente responde preguntas sobre un CSV ya cargado usando Google Gemini.")
 
-# Cargar CSV fijo
+# Cargar CSV
 df = pd.read_csv("datos.csv")
 
 # Mostrar vista previa
 st.subheader("Vista previa del CSV:")
 st.dataframe(df)
 
-# Entrada del usuario
+# Pregunta del usuario
 pregunta = st.text_input("Haz una pregunta sobre los datos:")
 
 if pregunta:
@@ -35,8 +34,8 @@ Responde de forma clara, precisa y únicamente con base en los datos.
 """
 
     try:
-        # Usar modelo Gemini Pro con sintaxis actual (v1)
-        model = genai.GenerativeModel(model_name="models/gemini-pro")
+        # Usar el modelo actualizado
+        model = genai.GenerativeModel(model_name="models/gemini-1.5-pro")
         response = model.generate_content([prompt])
 
         st.markdown("### 🧠 Respuesta:")
