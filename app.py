@@ -7,7 +7,8 @@ genai.configure(api_key=st.secrets["gemini"]["api_key"])
 
 st.set_page_config(page_title="Chat con CSV (Gemini)", layout="centered")
 
-st.title("📊 Chat con tu CSV usando Gemini")
+st.title("📊 Chat con tu CSV usando Gemini ✅")
+
 st.write("Este asistente responde preguntas sobre un CSV ya cargado usando Google Gemini.")
 
 # Cargar CSV fijo
