@@ -2,16 +2,15 @@ import streamlit as st
 import pandas as pd
 from openai import OpenAI
 
-# Inicializar cliente OpenAI
-client = OpenAI()
-openai_api_key = st.secrets["openai"]["api_key"]
+# Inicializar cliente OpenAI con la clave desde los secrets
+client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
 st.set_page_config(page_title="Chat con tu CSV fijo", layout="centered")
 
 st.title("📊 Chat con tu CSV fijo")
 st.write("Este asistente responde preguntas sobre un CSV ya cargado.")
 
-# Cargar CSV
+# Cargar el CSV
 df = pd.read_csv("datos.csv")
 
 # Mostrar vista previa
