@@ -2,21 +2,15 @@ import streamlit as st
 import pandas as pd
 import requests
 
-# Configura tu token de DeepSeek desde secrets.toml
-API_URL = "https://api.deepseek.com/v1/chat/completions"
-headers = {
-    "Authorization": f"Bearer {st.secrets['deepseek']['token']}",
-    "Content-Type": "application/json"
-}
+API_URL = "https://api-inference.huggingface.co/models/TheBloke/Mistral-7B-Instruct-v0.1-GGUF"
+headers = {"Authorization": f"Bearer {st.secrets['hf']['token']}"}
 
-st.set_page_config(page_title="Chat con CSV (DeepSeek)", layout="centered")
-st.title("📊 Chat con tu CSV usando DeepSeek")
-st.write("Este asistente responde preguntas sobre un CSV ya cargado usando el modelo DeepSeek vía su API oficial.")
+st.set_page_config(page_title="Chat con CSV (Mistral)", layout="centered")
+st.title("📊 Chat con tu CSV usando Mistral")
+st.write("Este asistente responde preguntas sobre un CSV ya cargado usando Mistral 7B Instruct desde Hugging Face.")
 
-# Cargar el CSV localmente
+# Cargar CSV
 df = pd.read_csv("datos.csv")
-
-# Mostrar vista previa del DataFrame
 st.subheader("Vista previa del CSV:")
 st.dataframe(df)
 
@@ -32,23 +26,21 @@ Columnas: {columnas}
 Resumen estadístico:\n{resumen}
 
 Pregunta: {pregunta}
-Responde de forma clara y precisa, usando solo los datos."""
+Responde de forma clara, precisa y únicamente con base en los datos."""
 
     payload = {
-        "model": "deepseek-chat",
-        "messages": [
-            {"role": "system", "content": "Eres un asistente útil."},
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.7,
-        "max_tokens": 512
+        "inputs": prompt,
+        "parameters": {
+            "temperature": 0.7,
+            "max_new_tokens": 512
+        }
     }
 
-    with st.spinner("Generando respuesta con DeepSeek..."):
+    with st.spinner("Generando respuesta con Mistral..."):
         response = requests.post(API_URL, headers=headers, json=payload)
 
         if response.status_code == 200:
-            generated = response.json()["choices"][0]["message"]["content"].strip()
+            generated = response.json()[0]['generated_text'].replace(prompt, "").strip()
             st.markdown("### 🧠 Respuesta:")
             st.write(generated)
         else:
