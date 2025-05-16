@@ -2,23 +2,17 @@ import streamlit as st
 import pandas as pd
 import requests
 
-# URL del modelo en Hugging Face
-API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1"
+API_URL = "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-alpha"
 headers = {"Authorization": f"Bearer {st.secrets['hf']['token']}"}
 
-st.set_page_config(page_title="Chat con CSV (Mistral)", layout="centered")
+st.set_page_config(page_title="Chat con CSV (Zephyr)", layout="centered")
+st.title("📊 Chat con tu CSV usando Zephyr 7B")
+st.write("Este asistente responde preguntas sobre un CSV usando el modelo Zephyr vía Hugging Face.")
 
-st.title("📊 Chat con tu CSV usando Mistral")
-st.write("Este asistente responde preguntas sobre un CSV ya cargado usando el modelo Mistral 7B Instruct desde Hugging Face.")
-
-# Cargar el CSV localmente
 df = pd.read_csv("datos.csv")
-
-# Mostrar vista previa del DataFrame
 st.subheader("Vista previa del CSV:")
 st.dataframe(df)
 
-# Pregunta del usuario
 pregunta = st.text_input("Haz una pregunta sobre los datos:")
 
 if pregunta:
@@ -26,12 +20,11 @@ if pregunta:
     resumen = df.describe(include='all').to_string()
 
     prompt = f"""Eres un experto en análisis de datos. Este es el resumen de un DataFrame:
-
 Columnas: {columnas}
 Resumen estadístico:\n{resumen}
 
 Pregunta: {pregunta}
-Responde de forma clara, detallada y solo usando los datos del CSV."""
+Responde de forma clara y precisa, usando solo los datos."""
 
     payload = {
         "inputs": prompt,
@@ -41,7 +34,7 @@ Responde de forma clara, detallada y solo usando los datos del CSV."""
         }
     }
 
-    with st.spinner("Generando respuesta con Mistral..."):
+    with st.spinner("Generando respuesta con Zephyr..."):
         response = requests.post(API_URL, headers=headers, json=payload)
 
         if response.status_code == 200:
