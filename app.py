@@ -1,45 +1,48 @@
 import streamlit as st
 import pandas as pd
-import google.generativeai as genai
+import requests
 
-# Configurar la clave API desde los secrets
-genai.configure(api_key=st.secrets["gemini"]["api_key"])
+# Configura tu token de Hugging Face desde secrets.toml
+API_URL = "https://api-inference.huggingface.co/models/deepseek-ai/deepseek-llm-7b-chat"
+headers = {"Authorization": f"Bearer {st.secrets['hf']['token']}"}
 
-st.set_page_config(page_title="Chat con CSV (Gemini)", layout="centered")
+st.set_page_config(page_title="Chat con CSV (DeepSeek)", layout="centered")
 
-st.title("📊 Chat con tu CSV usando Gemini")
-st.write("Este asistente responde preguntas sobre un CSV ya cargado usando Google Gemini.")
+st.title("📊 Chat con tu CSV usando DeepSeek")
+st.write("Este asistente responde preguntas sobre un CSV ya cargado usando el modelo DeepSeek vía Hugging Face.")
 
-# Cargar CSV
+# Cargar el CSV localmente
 df = pd.read_csv("datos.csv")
 
-# Mostrar vista previa
+# Mostrar una vista previa del CSV
 st.subheader("Vista previa del CSV:")
 st.dataframe(df)
 
-# Pregunta del usuario
+# Campo de texto para pregunta
 pregunta = st.text_input("Haz una pregunta sobre los datos:")
 
 if pregunta:
     columnas = ", ".join(df.columns)
     resumen = df.describe(include='all').to_string()
 
-    prompt = f"""
-Actúa como un experto en análisis de datos. Este es un resumen de un DataFrame:
+    prompt = f"""Eres un experto en análisis de datos. Tienes este DataFrame:
 Columnas: {columnas}
 Resumen estadístico:\n{resumen}
 
 Pregunta: {pregunta}
-Responde de forma clara, precisa y únicamente con base en los datos.
-"""
+Responde de forma clara, basada únicamente en los datos."""
 
-    try:
-        # Usar el modelo actualizado
-        model = genai.GenerativeModel(model_name="models/gemini-1.5-pro")
-        response = model.generate_content([prompt])
+    payload = {
+        "inputs": prompt,
+        "parameters": {"temperature": 0.7, "max_new_tokens": 512},
+    }
 
-        st.markdown("### 🧠 Respuesta:")
-        st.write(response.text)
+    with st.spinner("Generando respuesta con DeepSeek..."):
+        response = requests.post(API_URL, headers=headers, json=payload)
 
-    except Exception as e:
-        st.error(f"Ocurrió un error: {e}")
+        if response.status_code == 200:
+            generated = response.json()[0]['generated_text'].replace(prompt, "").strip()
+            st.markdown("### 🧠 Respuesta:")
+            st.write(generated)
+        else:
+            st.error(f"Error {response.status_code}: {response.text}")
