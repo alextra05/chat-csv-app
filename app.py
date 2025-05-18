@@ -2,12 +2,12 @@ import streamlit as st
 import pandas as pd
 from openai import OpenAI
 
-# Inicializa el cliente OpenAI usando clave desde secrets
+# Cliente OpenAI con clave desde secrets
 client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
-st.set_page_config(page_title="Chat con CSV (ChatGPT)", layout="centered")
-st.title("📊 Chat con tu CSV usando ChatGPT")
-st.write("Este asistente responde preguntas sobre un CSV ya cargado usando ChatGPT (gpt-3.5-turbo).")
+st.set_page_config(page_title="Chat con CSV (GPT-4 Turbo)", layout="centered")
+st.title("📊 Chat con tu CSV usando GPT-4 Turbo")
+st.write("Este asistente responde preguntas sobre un CSV usando el modelo GPT-4 Turbo de OpenAI.")
 
 # Cargar el CSV
 df = pd.read_csv("datos.csv")
@@ -16,28 +16,38 @@ df = pd.read_csv("datos.csv")
 st.subheader("Vista previa del CSV:")
 st.dataframe(df)
 
-# Campo de texto para la pregunta
+# Preparar muestra y resumen por columnas
+muestra = df.sample(min(len(df), 30), random_state=42).to_string(index=False)
+resumen_columnas = "\n".join([
+    f"{col} ({df[col].dtype}): {df[col].unique()[:5].tolist()}"
+    for col in df.columns
+])
+
+# Pregunta del usuario
 pregunta = st.text_input("Haz una pregunta sobre los datos:")
 
 if pregunta:
-    columnas = ", ".join(df.columns)
-    resumen = df.describe(include='all').to_string()
+    prompt = f"""
+Eres un experto en análisis de datos. A continuación tienes:
 
-    prompt = f"""Eres un experto en análisis de datos. Este es el resumen de un DataFrame:
-Columnas: {columnas}
-Resumen estadístico:\n{resumen}
+Resumen por columna:
+{resumen_columnas}
+
+Muestra del DataFrame:
+{muestra}
 
 Pregunta: {pregunta}
-Responde de forma clara, detallada y solo usando los datos del CSV."""
+Responde de forma precisa, clara y solo con base en los datos. Usa lenguaje técnico si es necesario.
+"""
 
     try:
         respuesta = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4-turbo",
             messages=[
                 {"role": "system", "content": "Eres un asistente experto en análisis de datos."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.7
+            temperature=0.5
         )
 
         st.markdown("### 🧠 Respuesta:")
