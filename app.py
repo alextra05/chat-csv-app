@@ -1,20 +1,22 @@
 import streamlit as st
 import pandas as pd
-import requests
+from openai import OpenAI
 
-API_URL = "https://api-inference.huggingface.co/models/TheBloke/Mistral-7B-Instruct-v0.1-GGUF"
-headers = {"Authorization": f"Bearer {st.secrets['hf']['token']}"}
+# Inicializa el cliente OpenAI usando clave desde secrets
+client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
-st.set_page_config(page_title="Chat con CSV (Mistral)", layout="centered")
-st.title("📊 Chat con tu CSV usando Mistral")
-st.write("Este asistente responde preguntas sobre un CSV ya cargado usando Mistral 7B Instruct desde Hugging Face.")
+st.set_page_config(page_title="Chat con CSV (ChatGPT)", layout="centered")
+st.title("📊 Chat con tu CSV usando ChatGPT")
+st.write("Este asistente responde preguntas sobre un CSV ya cargado usando ChatGPT (gpt-3.5-turbo).")
 
-# Cargar CSV
+# Cargar el CSV
 df = pd.read_csv("datos.csv")
+
+# Mostrar vista previa
 st.subheader("Vista previa del CSV:")
 st.dataframe(df)
 
-# Pregunta del usuario
+# Campo de texto para la pregunta
 pregunta = st.text_input("Haz una pregunta sobre los datos:")
 
 if pregunta:
@@ -26,22 +28,20 @@ Columnas: {columnas}
 Resumen estadístico:\n{resumen}
 
 Pregunta: {pregunta}
-Responde de forma clara, precisa y únicamente con base en los datos."""
+Responde de forma clara, detallada y solo usando los datos del CSV."""
 
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "temperature": 0.7,
-            "max_new_tokens": 512
-        }
-    }
+    try:
+        respuesta = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "Eres un asistente experto en análisis de datos."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7
+        )
 
-    with st.spinner("Generando respuesta con Mistral..."):
-        response = requests.post(API_URL, headers=headers, json=payload)
+        st.markdown("### 🧠 Respuesta:")
+        st.write(respuesta.choices[0].message.content)
 
-        if response.status_code == 200:
-            generated = response.json()[0]['generated_text'].replace(prompt, "").strip()
-            st.markdown("### 🧠 Respuesta:")
-            st.write(generated)
-        else:
-            st.error(f"Error {response.status_code}: {response.text}")
+    except Exception as e:
+        st.error(f"Ocurrió un error: {e}")
